@@ -62,7 +62,7 @@ function drawPitch(g, W, H) {
   const n = 16;
   const sw = (2 * PX) / n;
   for (let i = 0; i < n; i++) {
-    g.fillStyle = i % 2 ? '#14513c' : '#0f4332';
+    g.fillStyle = i % 2 ? '#1b7653' : '#125a3f';
     g.fillRect(X(-PX + i * sw), 0, X(-PX + (i + 1) * sw) - X(-PX + i * sw) + 1, H);
   }
   // inside the nets
@@ -343,9 +343,9 @@ export function buildStage(opts = {}) {
   root.name = 'stage';
 
   // light: a cool sun that casts the cars' shadows, and a sky/ground fill
-  const hemi = new THREE.HemisphereLight(0x6f8fd8, 0x18233a, 1.05);
+  const hemi = new THREE.HemisphereLight(0x7f9fe6, 0x1c2840, 1.35);
   root.add(hemi);
-  const sun = new THREE.DirectionalLight(0xc3d2ff, 1.9);
+  const sun = new THREE.DirectionalLight(0xd2deff, 2.2);
   sun.position.set(30, 60, 20);
   sun.target.position.set(0, 0, 0);
   sun.castShadow = quality !== 'low';

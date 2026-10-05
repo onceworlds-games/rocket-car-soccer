@@ -62,7 +62,7 @@ export class UI {
       e.preventDefault();
       handlers.onPlay();
     });
-    this.play.addEventListener('keydown', (e) => e.stopPropagation());
+    this.play.addEventListener('click', () => handlers.onPlay()); // Enter or Space on the focused button
 
     // hud
     this.hud = h('div', 'hud');

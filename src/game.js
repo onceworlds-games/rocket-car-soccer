@@ -1124,8 +1124,8 @@ export class Game {
         c.set({
           stick: 'analog',
           buttons: [
+            { id: 'boost', label: 'Boost', key: 'Shift' }, // the first is the biggest
             { id: 'jump', label: 'Jump', key: ' ' },
-            { id: 'boost', label: 'Boost', key: 'Shift' },
             { id: 'cam', label: 'Ball cam', key: 'c' },
           ],
         });

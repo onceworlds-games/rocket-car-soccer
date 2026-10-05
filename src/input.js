@@ -1,10 +1,11 @@
 // Player input: keyboard plus the platform's touch controls, boiled down to what a car takes each step.
-// W A S D / arrows drive, Space jumps, Shift boosts, C switches ball cam, R puts a stuck car back. On a phone the
+// W A S D / arrows drive, Space jumps, Shift boosts, C switches ball cam, holding R puts a stuck car back. On a phone the
 // platform draws an analog stick (steer and throttle) and the Jump, Boost and Ball cam buttons, which also press keys.
 
 const DEADZONE = 0.12;
 const JUMP_DEDUPE_MS = 70; // a key and the touch poll can both report one press
 const CAM_DEDUPE_MS = 220;
+const RESET_HOLD_MS = 900;
 
 export class Input {
   constructor(ow) {
@@ -14,6 +15,7 @@ export class Input {
     this.camToggled = false;
     this.resetQueued = false;
     this.enter = false;
+    this.rDown = 0; // when R went down: held for a moment, it puts a stuck car back
     this.lastJump = -1e9;
     this.lastCam = -1e9;
     this.prevPadJump = false;
@@ -27,6 +29,7 @@ export class Input {
     this.onKeyUp = (e) => this.key(e, false);
     this.onBlur = () => {
       this.keys.clear();
+      this.rDown = 0;
     };
     window.addEventListener('keydown', this.onKey);
     window.addEventListener('keyup', this.onKeyUp);
@@ -41,9 +44,12 @@ export class Input {
       this.keys.add(code);
       if (code === 'Space') this.queueJump();
       else if (code === 'KeyC') this.toggleCam();
-      else if (code === 'KeyR') this.resetQueued = true;
+      else if (code === 'KeyR') this.rDown = performance.now();
       else if (code === 'Enter') this.enter = true;
-    } else this.keys.delete(code);
+    } else {
+      this.keys.delete(code);
+      if (code === 'KeyR') this.rDown = 0;
+    }
   }
 
   queueJump() {
@@ -89,6 +95,10 @@ export class Input {
     } catch (e) {
       // controls are optional: keep the keyboard
     }
+    if (this.rDown && performance.now() - this.rDown > RESET_HOLD_MS) {
+      this.rDown = 0;
+      this.resetQueued = true;
+    }
     this.thr = thr < -1 ? -1 : thr > 1 ? 1 : thr;
     this.steer = steer < -1 ? -1 : steer > 1 ? 1 : steer;
     this.boost = boost;
@@ -123,6 +133,7 @@ export class Input {
 
   /** Forget anything pressed (a screen changed). */
   flush() {
+    this.rDown = 0;
     this.jumpQueued = false;
     this.camToggled = false;
     this.resetQueued = false;

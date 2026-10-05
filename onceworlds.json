@@ -13,7 +13,7 @@
     { "keys": ["Shift"], "action": "Boost" },
     { "keys": ["W", "S"], "action": "Tilt up or down in the air" },
     { "keys": ["C"], "action": "Ball cam on or off" },
-    { "keys": ["R"], "action": "Put a stuck car back" }
+    { "keys": ["R"], "action": "Hold to put a stuck car back" }
   ],
   "badges": [
     { "id": "first-goal", "name": "First Goal", "description": "Score a goal.", "icon": "store/badge-first-goal.png" },

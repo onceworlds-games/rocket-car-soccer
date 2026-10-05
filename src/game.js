@@ -123,7 +123,7 @@ export class Game {
     this.match = null;
     this.hostMid = null;
     this.lastWrite = 0;
-    this.doneSent = false;
+    this.doneAt = 0;
     this.snaps = [];
     this.rawS = undefined;
     this.snapRid = null;
@@ -422,7 +422,7 @@ export class Game {
       this.ui.hideResults();
       this.resultsFor = null;
       this.view?.fx.clear();
-      this.doneSent = false;
+      this.doneAt = 0;
       this.saved = new Set();
       this.host = null;
       this.match = null;
@@ -635,6 +635,11 @@ export class Game {
     }
     this.afterStep(now, kind);
     if (events) this.hostEvents(events, kind);
+    // the call that ends the match can fail to reach the room (a dropped connection): try again until the lobby is back
+    if (this.doneAt && kind === 'playing' && performance.now() - this.doneAt > 3000) {
+      this.doneAt = performance.now();
+      this.room.endMatch();
+    }
     if (this.tickN % 3 === 0 && car && car.kind === 'local' && car.visible) room.setPresence(encodePresence(car));
     if (this.host && this.tickN % (w.frozen ? 30 : 5) === 0) this.publishSnapshot(now);
     if (this.host) this.writeG();
@@ -740,10 +745,8 @@ export class Game {
   hostEvents(events, kind) {
     for (const e of events) {
       if (e.type === 'done') {
-        if (!this.doneSent) {
-          this.doneSent = true;
-          this.room.endMatch();
-        }
+        this.doneAt = performance.now();
+        this.room.endMatch();
       } else if (e.type === 'save') {
         if (e.id === this.me.id) this.onSave();
         else this.room.send({ t: 'save' }, { to: e.id });
@@ -930,7 +933,7 @@ export class Game {
     b.pz += dz;
   }
 
-  /** A car that hasn't moved for three seconds while its driver pushes is put back on its kickoff spot. */
+  /** A car that hasn't moved for three seconds while its driver pushes (or whose driver holds R) is put back on its kickoff spot. */
   checkStuck(dt, kind, g) {
     const c = this.myCar;
     const wantReset = this.input.takeReset();
@@ -939,9 +942,9 @@ export class Game {
       return;
     }
     const speed = Math.hypot(c.vx, c.vz);
-    if (speed < 0.8 && c.ground && (Math.abs(this.input.thr) > 0.3 || wantReset)) this.stuckT += dt * (wantReset ? 3 : 1);
+    if (speed < 0.8 && c.ground && Math.abs(this.input.thr) > 0.3) this.stuckT += dt;
     else if (speed > 2) this.stuckT = 0;
-    if (this.stuckT > 3) {
+    if (this.stuckT > 3 || (wantReset && c.ground)) {
       this.stuckT = 0;
       this.world.placeAtSpot(c);
       this.snapMyCamera();

@@ -247,7 +247,7 @@ export class Game {
     this.carsDirty = true;
     this.primed = false;
     this.sound.setMusic('menu');
-    this.legendUntil = performance.now() + 45000;
+    this.legendUntil = performance.now() + 20000;
   }
 
   // ================================================================ the frame

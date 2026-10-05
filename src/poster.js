@@ -47,16 +47,15 @@ function setBall(world, x, y, z, vx = 0, vy = 0, vz = 0) {
 
 function stageCover(view, world) {
   view.stage.setBoard(2, 1, '1:42');
-  // an orange car in the air about to hit the ball toward the blue goal, a blue car below and an orange one racing in
+  // an orange car in the air about to hit the ball toward the blue goal, a blue car racing below it
   setBall(world, -30.5, 5.6, 1.5, -16, 6, 0);
   placeCarAt(world, 'o1', 2, -26.2, 4.4, 1.2, Math.PI + 0.05, { p: 0.5, boost: true, speed: 26, vy: 6, accent: 1, dodge: 0 });
-  placeCarAt(world, 'b1', 1, -33.5, CAR_Y, -5, 0.5, { boost: true, speed: 20, accent: 3, ss: true });
-  placeCarAt(world, 'o2', 2, -12, CAR_Y, 8, Math.PI + 0.15, { boost: true, speed: 33, ss: true, accent: 2, slot: 1 });
-  placeCarAt(world, 'b2', 1, -35, CAR_Y, 9, -0.4, { speed: 10, accent: 5, slot: 1 });
+  placeCarAt(world, 'b1', 1, -31.5, CAR_Y, -3.6, 0.5, { boost: true, speed: 20, accent: 3, ss: true });
+  placeCarAt(world, 'b2', 1, -34, CAR_Y, 9, -0.4, { speed: 10, accent: 5, slot: 1 });
   view.lastTeam = 2;
   view.focus.x = -26;
   view.focus.z = 0;
-  view.rig.place(-12.5, 2.0, -9.5, -29, 4.2, 1.5, 58);
+  view.rig.place(-20.2, 1.7, -4.4, -30.2, 3.9, 1.6, 58);
   return () => view.hitFx(-29.4, 5.4, 1.4, 62, 2);
 }
 
@@ -66,24 +65,23 @@ function stageAction(view, world) {
   setBall(world, 42.6, 2.4, 1.4, 6, 1, 0);
   placeCarAt(world, 'b1', 1, 35.5, 2.6, -3.5, 0.15, { p: 0.35, boost: true, speed: 22, vy: 3, accent: 1, dodge: 0.2, dodgeA: 0 });
   placeCarAt(world, 'o1', 2, 33, CAR_Y, 6.5, Math.PI - 0.5, { speed: 12, accent: 2 });
-  placeCarAt(world, 'b2', 1, 27, CAR_Y, -9, 0.3, { boost: true, speed: 30, ss: true, accent: 4, slot: 1 });
   view.lastTeam = 1;
   view.focus.x = 32;
   view.focus.z = 0;
-  view.rig.place(23.5, 5.2, -10.5, 41, 3.1, 1.6, 62);
+  view.rig.place(30.5, 4.0, -9.5, 40.5, 3.0, 1.2, 60);
   return () => view.goalFx(1, [42.6, 2.4, 1.4]);
 }
 
 function stageWin(view, world) {
   view.stage.setBoard(4, 2, '0:00');
   // the winners in a row, one in the air, confetti and light beams behind them
-  const z = [-9.5, 0, 9.5];
-  placeCarAt(world, 'b1', 1, -1.5, CAR_Y, z[0], 0.12, { speed: 0, accent: 1 });
+  const z = [-7.2, 0, 7.2];
+  placeCarAt(world, 'b1', 1, -1.5, CAR_Y, z[0], 0.9, { speed: 0, accent: 1 });
   placeCarAt(world, 'b2', 1, 0, 3.4, z[1], 0.05, { p: 0.45, boost: true, speed: 8, vy: 2, accent: 3, slot: 1, dodge: 0 });
-  placeCarAt(world, 'b3', 1, -1.5, CAR_Y, z[2], -0.12, { speed: 0, accent: 5, slot: 2 });
+  placeCarAt(world, 'b3', 1, -1.5, CAR_Y, z[2], -0.9, { speed: 0, accent: 5, slot: 2 });
   setBall(world, -13, BALL_R, 0);
   view.lastTeam = 1;
-  view.rig.place(15, 2.7, 0, -2, 2.1, 0, 60);
+  view.rig.place(9.5, 2.3, 0, -2, 2.3, 0, 58);
   return () => {
     view.fx.confetti(-2, 14, 0, 170, 26, 5);
     for (const zz of z) view.fx.beam(-9, zz * 1.5, 0x4d9dff, 1.8, 20, 0.34);
@@ -93,11 +91,11 @@ function stageWin(view, world) {
 
 function stageIcon(view, world) {
   view.stage.setBoard(0, 0, '');
-  // one hero: an orange car boosting through the air toward the ball, seen from low in front
+  // one hero: an orange car boosting through the air toward the ball, low and from the side
   placeCarAt(world, 'o1', 2, 0, 1.55, 0, -0.55, { p: 0.3, boost: true, speed: 30, vy: 3, accent: 1, ss: true });
   setBall(world, 9.5, 3.6, -7.5);
   view.lastTeam = 2;
-  view.rig.place(-4.7, 1.0, 5.2, 1.3, 1.5, -0.6, 52);
+  view.rig.place(-7.09, 1.2, -6.08, -1.5, 1.5, 0, 48);
   return () => {};
 }
 

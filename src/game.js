@@ -143,6 +143,11 @@ export class Game {
     room.on('message', (d, from, at) => this.onMessage(d, from, at));
     room.on('close', (reason) => this.onClose(reason));
     room.on('matchend', () => this.onMatchEnd());
+    // a friends' server closes to newcomers while a match plays: leave the door open, they watch and join the next one
+    // (never in a public server, where opening the room again would end the match)
+    room.on('starting', () => {
+      if (room.isHost && room.kind === 'private') room.setOpen?.(true);
+    });
     room.on('host', () => {
       this.carsDirty = true;
     });

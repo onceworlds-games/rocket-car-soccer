@@ -122,7 +122,7 @@ body {
   clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
   cursor: pointer;
   position: relative;
-  box-shadow: 0 0 0 4px var(--gold);
+  border-bottom: 8px solid var(--gold);
   animation: breathe 1.6s ease-in-out infinite;
 }
 
@@ -634,7 +634,7 @@ body {
 
 .invite {
   position: absolute;
-  top: calc(12px + var(--safe-t));
+  top: calc(clamp(74px, 12vh, 104px) + 20px + 56px + var(--safe-t));
   right: calc(16px + var(--safe-r));
   pointer-events: auto;
   font: inherit;

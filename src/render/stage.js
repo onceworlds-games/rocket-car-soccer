@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { PX, PZ, WALL_H, GOAL_HW, GOAL_H, GOAL_D, PADS, PAD_SMALL, PAD_BIG } from '../sim/consts.js';
+import { PX, PZ, WALL_H, CEIL, GOAL_HW, GOAL_H, GOAL_D, PADS, PAD_SMALL, PAD_BIG } from '../sim/consts.js';
 import { mulberry32 } from '../sim/rng.js';
 import { TEAMS, FONT } from './palette.js';
 
@@ -175,6 +175,8 @@ function buildWalls() {
   const body = [];
   const blue = [];
   const orange = [];
+  const glassBlue = [];
+  const glassOrange = [];
   for (const [x0, z0, x1, z1] of WALLS) {
     const dx = x1 - x0;
     const dz = z1 - z0;
@@ -194,8 +196,12 @@ function buildWalls() {
     // light strip along the top and another low on the inside
     list.push(placed(new THREE.BoxGeometry(len + 0.02, 0.45, 0.28), mx - nx * 0.14, WALL_H - 0.3, mz - nz * 0.14, ry));
     list.push(placed(new THREE.BoxGeometry(len + 0.02, 0.18, 0.2), mx - nx * 0.1, 0.12, mz - nz * 0.1, ry));
+    // the ball bounces off an invisible barrier above the wall, up to the ceiling: a very faint glass shows where
+    (mx < 0 ? glassBlue : glassOrange).push(placed(new THREE.PlaneGeometry(len, CEIL - WALL_H), mx, (CEIL + WALL_H) / 2, mz, ry));
   }
-  return { body: mergeGeometries(body), blue: mergeGeometries(blue), orange: mergeGeometries(orange) };
+  // and above the two goal mouths
+  for (const sx of [-1, 1]) (sx < 0 ? glassBlue : glassOrange).push(placed(new THREE.PlaneGeometry(2 * GOAL_HW, CEIL - WALL_H), sx * PX, (CEIL + WALL_H) / 2, 0, Math.PI / 2));
+  return { body: mergeGeometries(body), blue: mergeGeometries(blue), orange: mergeGeometries(orange), glassBlue: mergeGeometries(glassBlue), glassOrange: mergeGeometries(glassOrange) };
 }
 
 // ---------------------------------------------------------------- goals
@@ -373,6 +379,11 @@ export function buildStage(opts = {}) {
   root.add(new THREE.Mesh(walls.body, new THREE.MeshStandardMaterial({ color: 0x1b2540, roughness: 0.42, metalness: 0.55 })));
   for (const [geom, team] of [[walls.blue, BLUE], [walls.orange, ORANGE]]) {
     root.add(new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: new THREE.Color(team.glow).multiplyScalar(1.15), toneMapped: false })));
+  }
+  for (const [geom, team] of [[walls.glassBlue, BLUE], [walls.glassOrange, ORANGE]]) {
+    root.add(
+      new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: team.glow, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, toneMapped: false })),
+    );
   }
 
   // goals

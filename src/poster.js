@@ -295,7 +295,7 @@ function drawBadge(canvas, id) {
 
 // ---------------------------------------------------------------- run
 
-export async function runPoster(name) {
+export async function runPoster(name, { renderer = null } = {}) {
   const canvas = document.getElementById('gl');
   const root = document.getElementById('ui');
   const isBadge = name.startsWith('badge-');
@@ -317,7 +317,7 @@ export async function runPoster(name) {
   }
 
   const rand = mulberry32(20261004);
-  const view = new View(canvas, { quality: 'high', poster: true, rand });
+  const view = new View(canvas, { quality: 'high', poster: true, rand, renderer });
   view.resize(W, H, 1);
   const world = new World(7);
   const fire = SCENES[key](view, world);

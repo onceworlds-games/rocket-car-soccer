@@ -202,6 +202,20 @@ export class Hub {
     this.log = { messages: 0, states: {}, endMatch: 0 };
   }
 
+  /** The match waits (too few players connected): matchNow() stands still until it resumes. */
+  pause(on) {
+    if (on && !this.match.paused) {
+      this.match = { ...this.match, paused: { since: this.time } };
+      for (const r of this.rooms.values()) r.emit('matchpause', this.match);
+    } else if (!on && this.match.paused) {
+      this.pausedMs += this.time - this.match.paused.since;
+      const m = { ...this.match };
+      delete m.paused;
+      this.match = m;
+      for (const r of this.rooms.values()) r.emit('matchresume', this.match);
+    }
+  }
+
   now() {
     return this.time;
   }
@@ -313,7 +327,8 @@ class FakeRoom {
   matchNow() {
     const m = this.hub.match;
     if (m.phase !== 'playing') return 0;
-    return Math.max(0, this.hub.time - m.startedAt - this.hub.pausedMs);
+    const now = m.paused ? m.paused.since : this.hub.time;
+    return Math.max(0, now - m.startedAt - this.hub.pausedMs);
   }
   setState(k, v) {
     this.writes++;

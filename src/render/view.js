@@ -35,7 +35,7 @@ export class View {
     r.setClearColor(0x05070f, 1);
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.Fog(0x0a1224, 130, 340);
+    this.scene.fog = new THREE.Fog(0x0a1224, 80, 290);
     this.camera = new THREE.PerspectiveCamera(75, 1, 0.3, 900);
     this.rig = new CameraRig();
 

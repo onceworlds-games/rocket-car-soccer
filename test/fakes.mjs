@@ -184,7 +184,7 @@ export class FakeInput {
   flush() {}
 }
 
-const DEPS = { View: FakeView, UI: FakeUI, Sound: FakeSound, Input: FakeInput };
+export const DEPS = { View: FakeView, UI: FakeUI, Sound: FakeSound, Input: FakeInput };
 
 // ---------------------------------------------------------------- the room server
 

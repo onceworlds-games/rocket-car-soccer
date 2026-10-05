@@ -25,7 +25,7 @@ export function makeStub() {
     spectating: false,
     running: false,
     budget: { messagesPerSecond: 60, presenceHz: 20, bytesPerSecond: 131072 },
-    matchNow: () => 0,
+    matchNow: () => Date.now() - t0,
     isParticipant: () => false,
     setState(k, v) {
       if (v === null || v === undefined) delete this.state[k];

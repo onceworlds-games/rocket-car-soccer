@@ -79,6 +79,7 @@ export class Game {
     this.closedUi = null;
     this.saved = new Set();
     this.awarded = new Set();
+    this.names = new Map(); // names seen, so a player who left still has theirs on the results
     this.reduced = false;
     this.stats = null; // the player's totals, read once at the start and written once per match
     try {
@@ -489,7 +490,8 @@ export class Game {
     const roster = g ? g.roster : this.rosterFallback().roster;
     for (const r of roster) {
       const p = room.players.get(r.id);
-      out.push({ id: r.id, team: r.tm, slot: r.sl, bot: !!r.b, name: r.b ? r.nm : p?.name || 'Player', gone: !r.b && !p });
+      if (p && p.name) this.names.set(r.id, p.name);
+      out.push({ id: r.id, team: r.tm, slot: r.sl, bot: !!r.b, name: r.b ? r.nm : p?.name || this.names.get(r.id) || 'Player', gone: !r.b && !p });
     }
     return out;
   }
@@ -1007,7 +1009,7 @@ export class Game {
     const r = g.roster.find((x) => x.id === id);
     if (!r) return 'Player';
     if (r.b) return r.nm;
-    return this.room.players.get(id)?.name || 'Player';
+    return this.room.players.get(id)?.name || this.names.get(id) || 'Player';
   }
 
   onGoal(g) {
@@ -1114,7 +1116,7 @@ export class Game {
     this.resultsFor = g.mid;
     const res = g.res;
     const rows = g.roster
-      .map((r, i) => ({ id: r.id, name: r.b ? r.nm : this.room.players.get(r.id)?.name || 'Player', team: r.tm, pts: res.pts[r.id] || 0, mvp: res.mvp === r.id, you: r.id === this.me.id, order: i, avatar: r.b ? null : this.avatars.url(r.id) }))
+      .map((r, i) => ({ id: r.id, name: r.b ? r.nm : this.room.players.get(r.id)?.name || this.names.get(r.id) || 'Player', team: r.tm, pts: res.pts[r.id] || 0, mvp: res.mvp === r.id, you: r.id === this.me.id, order: i, avatar: r.b ? null : this.avatars.url(r.id) }))
       .sort((a, b) => b.pts - a.pts || a.order - b.order);
     const tm = this.myTeam(g);
     const head = res.win === 0 ? 'DRAW' : `${TEAMS[res.win].name} WINS`;

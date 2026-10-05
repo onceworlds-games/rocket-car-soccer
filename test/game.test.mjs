@@ -298,3 +298,45 @@ test('the host loses its connection and gets it back: it carries on from the rec
   for (let i = 0; i < 900 && hub.match.phase !== 'lobby'; i++) run(hub, 500);
   assert.equal(hub.match.phase, 'lobby');
 });
+
+test('opened on its own (no platform): the stub room lets the title, the lobby and driving work without throwing', async () => {
+  const { makeStub } = await import('../src/net/stub.js');
+  const { Game } = await import('../src/game.js');
+  const { DEPS, clock } = await import('./fakes.mjs');
+  const { ow, room } = makeStub();
+  const errors = [];
+  const orig = console.error;
+  console.error = (...a) => errors.push(a.join(' '));
+  try {
+    const game = new Game({ ow, room, canvas: {}, root: {}, deps: { ...DEPS } });
+    const frames = (n) => {
+      for (let i = 0; i < n; i++) {
+        clock.vt += 1000 / 60;
+        const cbs = clock.callbacks;
+        clock.callbacks = [];
+        for (const cb of cbs) cb(clock.vt);
+      }
+    };
+    frames(120);
+    assert.equal(game.mode, 'title');
+    game.play();
+    frames(60);
+    game.input.thr = 1;
+    game.input.boost = true;
+    let fastest = 0;
+    for (let i = 0; i < 18; i++) {
+      frames(10);
+      fastest = Math.max(fastest, Math.hypot(game.myCar.vx, game.myCar.vz));
+    }
+    assert.equal(game.kind, 'lobby');
+    assert.ok(fastest > 25, `the boosted car reached ${fastest}`);
+    assert.ok(game.world.ball.x !== 0 || game.world.ball.z !== 0, 'the car hit the ball');
+    assert.equal(game.world.cars.length, 1);
+    game.input.jump = true;
+    frames(30);
+    assert.ok(game.view.renders > 300);
+  } finally {
+    console.error = orig;
+  }
+  assert.deepEqual(errors, []);
+});

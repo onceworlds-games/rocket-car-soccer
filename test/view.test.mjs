@@ -8,7 +8,6 @@ import { installDom, ctx2d } from './dom.mjs';
 installDom();
 globalThis.requestAnimationFrame = () => 0;
 globalThis.window = { innerWidth: 1280, innerHeight: 720 };
-const THREE = await import('three');
 const { View } = await import('../src/render/view.js');
 const { World } = await import('../src/sim/world.js');
 const { makeCar } = await import('../src/sim/car.js');

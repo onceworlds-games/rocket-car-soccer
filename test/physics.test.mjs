@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { makeCar, placeCar, stepCar } from '../src/sim/car.js';
 import { makeBall, placeBall, stepBall, advanceBall, carBallHit } from '../src/sim/ball.js';
 import { World } from '../src/sim/world.js';
-import { CARP, BALLP, BALL_R, CAR_Y, STEP, PX, PZ } from '../src/sim/consts.js';
+import { CARP, BALLP, BALL_R, CAR_Y, STEP } from '../src/sim/consts.js';
 import { insideArena } from '../src/sim/arena.js';
 import { mulberry32 } from '../src/sim/rng.js';
 import { finiteWorld, inBounds } from './harness.mjs';

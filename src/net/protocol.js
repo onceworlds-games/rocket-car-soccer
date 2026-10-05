@@ -30,7 +30,7 @@ export function encodePresence(c) {
     vx: r1(c.vx),
     vy: r1(c.vy),
     vz: r1(c.vz),
-    b: Math.round(c.boost),
+    b: r2(c.boost / 100),
     bo: c.boosting ? 1 : 0,
     fl: c.dodge > 0 ? r2(c.dodge) : 0,
     fd: r2(c.dodgeA),
@@ -52,7 +52,7 @@ export function readPresence(p, out) {
   out.vx = n(p.vx, -80, 80);
   out.vy = n(p.vy, -80, 80);
   out.vz = n(p.vz, -80, 80);
-  out.boost = n(p.b, 0, 100);
+  out.boost = n(p.b, 0, 1) * 100;
   out.bo = n(p.bo, 0, 1);
   out.fl = n(p.fl, 0, 1);
   out.fd = n(p.fd, -7, 7);

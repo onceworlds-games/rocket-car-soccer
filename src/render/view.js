@@ -18,13 +18,14 @@ const _v = new THREE.Vector3();
 export class View {
   /**
    * `canvas` is the one full-window canvas. `quality` is 'low' | 'medium' | 'high'. In `poster` mode the buffer is kept so the
-   * frame can be read back, and the random numbers are seeded so the same frame is drawn every time.
+   * frame can be read back, and the random numbers are seeded so the same frame is drawn every time. `renderer` is for
+   * tests, which give a stand-in that draws nothing.
    */
-  constructor(canvas, { quality = 'high', poster = false, rand = Math.random } = {}) {
+  constructor(canvas, { quality = 'high', poster = false, rand = Math.random, renderer = null } = {}) {
     this.canvas = canvas;
     this.quality = quality;
     this.poster = poster;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: quality === 'high', powerPreference: 'high-performance', preserveDrawingBuffer: poster });
+    this.renderer = renderer || new THREE.WebGLRenderer({ canvas, antialias: quality === 'high', powerPreference: 'high-performance', preserveDrawingBuffer: poster });
     const r = this.renderer;
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.ACESFilmicToneMapping;
@@ -64,6 +65,7 @@ export class View {
     this.lastTeam = 0;
     this.focus = { x: 0, z: 0 };
     this.flash = 0;
+    this.freeze = false; // store art: the frame is held, no new sparks
     this._ex = new THREE.Vector3();
     document.addEventListener('visibilitychange', () => {
       this.dtSkip = true;
@@ -146,6 +148,7 @@ export class View {
     for (const v of this.views.values()) {
       v.update(vdt, alpha, this.time);
       const c = v.car;
+      if (this.freeze) continue;
       if (c.boosting && c.visible) {
         const e = v.exhaustWorld(this._ex);
         this.fx.flame(e.x, e.y, e.z, -Math.cos(v.hh), -Math.sin(v.hh), c.vx, c.vz);
@@ -157,7 +160,7 @@ export class View {
     }
     const b = world.ball;
     this.ball.update(vdt, alpha, b, this.lastTeam);
-    if (Math.hypot(b.vx, b.vy, b.vz) > 30) {
+    if (!this.freeze && Math.hypot(b.vx, b.vy, b.vz) > 30) {
       const t = TEAMS[this.lastTeam];
       this.fx.trail(this.ball.x, this.ball.y, this.ball.z, t ? t.glow : 0xdfe8ff, 1.5);
     }

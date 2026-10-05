@@ -22,7 +22,7 @@ test('presence round trips compactly and survives junk', () => {
   assert.equal(readPresence(p, out), true);
   assert.equal(out.x, 12.35);
   assert.equal(out.z, -7.89);
-  assert.equal(out.boost, 62);
+  assert.equal(Math.round(out.boost), 62);
   assert.equal(out.bo, 1);
   assert.equal(readPresence(null, {}), false);
   assert.equal(readPresence({ x: 'a', y: 0, z: 0, h: 0 }, {}), false);

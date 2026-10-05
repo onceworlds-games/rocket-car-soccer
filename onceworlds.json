@@ -1,0 +1,24 @@
+{
+  "slug": "rocket-car-soccer",
+  "name": "Rocket Car Soccer",
+  "description": "Drive, boost and fly to smash the giant ball into the goal.",
+  "dir": "dist",
+  "genre": "Sports",
+  "icon": "store/icon.png",
+  "thumbnails": ["store/thumb-1.png", "store/thumb-2.png", "store/thumb-3.png"],
+  "controls": [
+    { "keys": ["W", "A", "S", "D"], "action": "Drive" },
+    { "keys": ["↑", "←", "↓", "→"], "action": "Drive (arrow keys)" },
+    { "keys": ["Space"], "action": "Jump, again to flip" },
+    { "keys": ["Shift"], "action": "Boost" },
+    { "keys": ["W", "S"], "action": "Tilt up or down in the air" },
+    { "keys": ["C"], "action": "Ball cam on or off" },
+    { "keys": ["R"], "action": "Put a stuck car back" }
+  ],
+  "badges": [
+    { "id": "first-goal", "name": "First Goal", "description": "Score a goal.", "icon": "store/badge-first-goal.png" },
+    { "id": "hat-trick", "name": "Hat Trick", "description": "Score 3 goals in one match.", "icon": "store/badge-hat-trick.png" },
+    { "id": "aerial", "name": "Aerial", "description": "Score with a touch made while your car is in the air.", "icon": "store/badge-aerial.png" },
+    { "id": "first-win", "name": "First Win", "description": "Win a match.", "icon": "store/badge-first-win.png" }
+  ]
+}

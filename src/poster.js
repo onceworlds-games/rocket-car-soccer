@@ -63,7 +63,7 @@ function stageAction(view, world) {
   view.stage.setBoard(3, 2, '0:31');
   // blue has just scored in the orange net: the ball is in it and the blast is going off
   setBall(world, 42.6, 2.4, 1.4, 6, 1, 0);
-  placeCarAt(world, 'b1', 1, 35.5, 2.6, -3.5, 0.15, { p: 0.35, boost: true, speed: 22, vy: 3, accent: 1, dodge: 0.2, dodgeA: 0 });
+  placeCarAt(world, 'b1', 1, 35.5, 1.6, -3.5, 0.15, { p: 0.08, boost: true, speed: 22, vy: 1, accent: 1, dodge: 0 });
   placeCarAt(world, 'o1', 2, 33, CAR_Y, 6.5, Math.PI - 0.5, { speed: 12, accent: 2 });
   view.lastTeam = 1;
   view.focus.x = 32;
@@ -77,7 +77,7 @@ function stageWin(view, world) {
   // the winners in a row, one in the air, confetti and light beams behind them
   const z = [-7.2, 0, 7.2];
   placeCarAt(world, 'b1', 1, -1.5, CAR_Y, z[0], 0.9, { speed: 0, accent: 1 });
-  placeCarAt(world, 'b2', 1, 0, 3.4, z[1], 0.05, { p: 0.45, boost: true, speed: 8, vy: 2, accent: 3, slot: 1, dodge: 0 });
+  placeCarAt(world, 'b2', 1, 1.2, CAR_Y, z[1], 0, { speed: 0, accent: 3, slot: 1 });
   placeCarAt(world, 'b3', 1, -1.5, CAR_Y, z[2], -0.9, { speed: 0, accent: 5, slot: 2 });
   setBall(world, -13, BALL_R, 0);
   view.lastTeam = 1;

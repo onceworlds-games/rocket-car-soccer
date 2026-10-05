@@ -69,12 +69,16 @@ export class UI {
     this.score = h('div', 'score');
     const sb = h('div', 'side b');
     this.numB = h('span', 'num', '0');
+    this.youB = h('span', 'you-tag b', 'YOU');
+    this.youB.hidden = true;
     sb.append(h('span', 'sym t1'), this.numB);
     this.clock = h('div', 'mid', '0:00');
     const so = h('div', 'side o');
     this.numO = h('span', 'num', '0');
+    this.youO = h('span', 'you-tag o', 'YOU');
+    this.youO.hidden = true;
     so.append(this.numO, h('span', 'sym t2'));
-    this.score.append(sb, this.clock, so);
+    this.score.append(sb, this.clock, so, this.youB, this.youO);
 
     this.boost = h('div', 'boost');
     this.boost.innerHTML =
@@ -183,6 +187,12 @@ export class UI {
       if (this.scores[1] >= 0 && o > this.scores[1]) this.bump(this.numO);
       this.scores[1] = o;
     }
+  }
+
+  /** Marks your side on the scoreboard (1 blue, 2 orange, 0 for none). */
+  setMyTeam(team) {
+    this.youB.hidden = team !== 1;
+    this.youO.hidden = team !== 2;
   }
 
   bump(el) {

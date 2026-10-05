@@ -80,6 +80,16 @@ export class Game {
     this.saved = new Set();
     this.awarded = new Set();
     this.reduced = false;
+    this.stats = null; // the player's totals, read once at the start and written once per match
+    try {
+      Promise.resolve(ow.save.get('stats'))
+        .then((v) => {
+          if (v && typeof v === 'object' && !this.stats) this.stats = v;
+        })
+        .catch(() => {});
+    } catch (e) {
+      // no saves here
+    }
     this.attachRoom(room);
     this.applySettings();
     this.buildDemo();
@@ -1069,7 +1079,7 @@ export class Game {
     const ow = this.ow;
     (async () => {
       try {
-        const stats = (await ow.save.get('stats')) || {};
+        const stats = this.stats || (await ow.save.get('stats')) || {};
         const next = {
           matches: (Number(stats.matches) || 0) + 1,
           wins: (Number(stats.wins) || 0) + (won ? 1 : 0),
@@ -1077,6 +1087,7 @@ export class Game {
           assists: (Number(stats.assists) || 0) + st[1],
           saves: (Number(stats.saves) || 0) + st[2],
         };
+        this.stats = next;
         await ow.save.set('stats', next);
         if (won) await ow.leaderboards.submit('wins', next.wins);
       } catch (e) {
@@ -1257,6 +1268,7 @@ export class Game {
 
     // the goal, stated: a line under the clock around every kickoff, for the player who has a side
     const tm = g ? this.myTeam(g) : room.me.team;
+    ui.setMyTeam(!lobby && !spectating && tm ? tm : 0);
     if (!lobby && !spectating && tm && (kind === 'starting' || (g && (g.phase === 'kick' || now < this.bannerUntil)))) {
       const opp = TEAMS[3 - tm];
       ui.setBanner(`SCORE IN ${opp.name} GOAL`, hex(opp.glow));

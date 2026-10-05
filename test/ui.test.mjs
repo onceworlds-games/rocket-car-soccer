@@ -51,6 +51,11 @@ test('score, clock, boost ring and the cam switch show what they are told', () =
   ui.setBoost(50, true);
   assert.ok(ui.boost.className.includes('on'));
   assert.ok(Math.abs(Number(ui.boostFill.style.strokeDashoffset) - (2 * Math.PI * 40) / 2) < 0.01);
+  ui.setMyTeam(2);
+  assert.equal(ui.youO.hidden, false);
+  assert.equal(ui.youB.hidden, true);
+  ui.setMyTeam(0);
+  assert.equal(ui.youO.hidden, true);
   ui.setCam(true);
   assert.ok(ui.cam._classes.has('on'));
   ui.cam.dispatch('pointerdown');

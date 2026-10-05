@@ -197,6 +197,24 @@ body {
   clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
 }
 
+.score .you-tag {
+  position: absolute;
+  top: calc(100% + 6px);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  padding: 2px 9px;
+  background: var(--gold);
+  color: #1a1300;
+}
+
+.score .you-tag.b {
+  left: 12px;
+}
+
+.score .you-tag.o {
+  right: 12px;
+}
+
 .score .num {
   display: inline-block;
   min-width: 0.7em;

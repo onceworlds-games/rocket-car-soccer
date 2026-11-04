@@ -10,26 +10,12 @@ function make() {
   const root = new El('div');
   const calls = [];
   const ui = new UI(root, {
-    onPlay: () => calls.push('play'),
     onSetting: (id, v) => calls.push(['setting', id, v]),
     onCam: () => calls.push('cam'),
     onInvite: () => calls.push('invite'),
   });
   return { root, ui, calls };
 }
-
-test('the title has one Play button; a tap anywhere on it plays', () => {
-  const { root, ui, calls } = make();
-  ui.showTitle(true);
-  assert.equal(ui.title.hidden, false);
-  const buttons = root.find((e) => e.tagName === 'BUTTON' && !e.hidden && !e.parent.hidden && e.parent === ui.title);
-  assert.equal(buttons.length, 1);
-  assert.equal(buttons[0].textContent.startsWith('PLAY'), true);
-  ui.title.dispatch('pointerdown');
-  assert.deepEqual(calls, ['play']);
-  ui.showTitle(false);
-  assert.equal(ui.title.hidden, true);
-});
 
 test('score, clock, boost ring and the cam switch show what they are told', () => {
   const { ui } = make();
@@ -72,13 +58,6 @@ test('callouts, the countdown and the goal banner come and go', () => {
   assert.equal(ui.callSub.style.display, 'none');
   ui.tick(performance.now() + 5000);
   assert.equal(ui.callout.hidden, true);
-  ui.countdown('3');
-  assert.equal(ui.count.hidden, false);
-  assert.equal(ui.count.textContent, '3');
-  ui.countdown('2');
-  assert.equal(ui.count.textContent, '2');
-  ui.countdown(null);
-  assert.equal(ui.count.hidden, true);
   ui.setBanner('SCORE IN ORANGE GOAL', '#ffa24a');
   assert.equal(ui.banner.hidden, false);
   assert.equal(ui.banner.textContent, 'SCORE IN ORANGE GOAL');
@@ -90,26 +69,25 @@ test('callouts, the countdown and the goal banner come and go', () => {
 test('name tags: one per player, reused, hidden when unwanted, text never parsed as markup', () => {
   const { ui } = make();
   ui.beginTags();
-  ui.tag('a', '<img src=x onerror=alert(1)>', 1, 100, 50, 1, true, 'https://example.test/a.svg');
-  ui.tag('b', 'Bea', 2, 300, 80, 0.5, false, null);
+  ui.tag('a', '<img src=x onerror=alert(1)>', 1, 100, 50, 1, 'https://example.test/a.svg');
+  ui.tag('b', 'Bea', 2, 300, 80, 0.5, null);
   ui.endTags();
   assert.equal(ui.tags.children.length, 2);
   const a = ui.tagMap.get('a');
   assert.equal(a.nm.textContent, '<img src=x onerror=alert(1)>');
   assert.equal(a.nm.children.length, 0, 'the name is text, not elements');
   assert.equal(a.av.children[0].crossOrigin, 'anonymous');
-  assert.equal(a.rd.hidden, false);
   assert.ok(ui.tagMap.get('b').av.textContent === 'B', 'a letter stands in for a missing face');
   assert.ok(a.el.style.transform.includes('100px'));
   ui.beginTags();
-  ui.tag('a', 'Ann', 1, 120, 60, 1, false, 'https://example.test/a.svg');
+  ui.tag('a', 'Ann', 1, 120, 60, 1, 'https://example.test/a.svg');
   ui.endTags();
   assert.equal(ui.tags.children.length, 2, 'the same element is reused');
   assert.equal(ui.tagMap.get('b').shown, false);
   assert.equal(ui.tagMap.get('b').el.style.display, 'none');
   for (let i = 0; i < 700; i++) {
     ui.beginTags();
-    ui.tag('a', 'Ann', 1, 120, 60, 1, false, null);
+    ui.tag('a', 'Ann', 1, 120, 60, 1, null);
     ui.endTags();
   }
   assert.equal(ui.tagMap.has('b'), false, 'a tag nobody wants any more is dropped');

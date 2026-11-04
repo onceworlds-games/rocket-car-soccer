@@ -16,7 +16,6 @@ test('three matches in a row with random drivers, a leaver and a latecomer', asy
     const hub = new Hub();
     const rng = mulberry32(99);
     const pages = [await makePage(hub, 'ann', { team: 1 }), await makePage(hub, 'bob', { team: 2 }), await makePage(hub, 'cat', { team: 1 })];
-    for (const p of pages) p.game.play();
     run(hub, 1000);
     const drive = () => {
       for (const p of pages) {
@@ -47,7 +46,6 @@ test('three matches in a row with random drivers, a leaver and a latecomer', asy
         if (m === 1 && seconds === 30) hub.leave('cat'); // cat drops out mid-match
         if (m === 2 && seconds === 20 && !late) {
           late = await makePage(hub, 'dan', { team: 2 });
-          late.game.play();
           pages.push(late);
         }
         for (const p of pages) {

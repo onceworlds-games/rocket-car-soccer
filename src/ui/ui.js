@@ -1,4 +1,4 @@
-// The interface, as DOM over the canvas: title, lobby settings, the in-game HUD, name tags, callouts, countdown and the
+// The interface, as DOM over the canvas: lobby settings, the in-game HUD, name tags, callouts and the
 // results podium. Names and everything else that comes from other players is set with textContent, never innerHTML.
 
 import { TEAMS } from '../render/palette.js';
@@ -36,33 +36,18 @@ function setAvatar(el, url, name) {
 }
 
 export class UI {
-  /** `handlers`: onPlay(), onSetting(id, value), onCam(), onInvite(). */
+  /** `handlers`: onSetting(id, value), onCam(), onInvite(). */
   constructor(root, handlers) {
     this.root = root;
     this.hd = handlers;
     this.callUntil = 0;
     this.bannerUntil = 0;
-    this.countText = '';
     this.scores = [-1, -1];
     this.tagMap = new Map();
     this.settingEls = new Map();
     this.lastBoost = -1;
     this.reduced = false;
     root.textContent = '';
-
-    // title
-    this.title = h('div', 'title');
-    const logo = h('div', 'logo');
-    logo.append(h('div', 'a outline', 'ROCKET CAR'), h('div', 'b', 'SOCCER'), h('div', 'bar'));
-    this.play = h('button', 'play');
-    this.play.type = 'button';
-    this.play.append('PLAY', h('small', '', 'ENTER'));
-    this.title.append(logo, this.play);
-    this.title.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      handlers.onPlay();
-    });
-    this.play.addEventListener('click', () => handlers.onPlay()); // Enter or Space on the focused button
 
     // hud
     this.hud = h('div', 'hud');
@@ -108,12 +93,10 @@ export class UI {
     this.callSub2 = h('div', 'sub2 outline');
     this.callout.append(this.callBig, this.callSub, this.callSub2);
     this.callout.hidden = true;
-    this.count = h('div', 'count outline');
-    this.count.hidden = true;
     this.banner = h('div', 'banner');
     this.banner.hidden = true;
     this.flashEl = h('div', 'flash');
-    this.hud.append(this.tags, this.score, this.boost, this.cam, this.watching, this.arrow, this.callout, this.count, this.banner, this.flashEl);
+    this.hud.append(this.tags, this.score, this.boost, this.cam, this.watching, this.arrow, this.callout, this.banner, this.flashEl);
 
     // lobby
     this.lobby = h('div', 'lobby');
@@ -138,17 +121,12 @@ export class UI {
 
     this.results = null;
     this.closed = null;
-    root.append(this.hud, this.lobby, this.title);
-    this.showTitle(false);
+    root.append(this.hud, this.lobby);
     this.showHud(false);
     this.showLobby(false);
   }
 
   // ------------------------------------------------------------ switches
-
-  showTitle(on) {
-    this.title.hidden = !on;
-  }
 
   showHud(on) {
     this.hud.hidden = !on;
@@ -246,25 +224,6 @@ export class UI {
     this.callUntil = 0;
   }
 
-  /** The big 3-2-1-GO: pass the text, or null to clear. */
-  countdown(text, color = '#fff') {
-    if (text === null || text === undefined) {
-      if (!this.count.hidden) this.count.hidden = true;
-      this.countText = '';
-      return;
-    }
-    if (text === this.countText && !this.count.hidden) return;
-    this.countText = text;
-    this.count.textContent = text;
-    this.count.style.color = color;
-    this.count.hidden = false;
-    this.count.classList.remove('pop');
-    if (!this.reduced) {
-      void this.count.offsetWidth;
-      this.count.classList.add('pop');
-    }
-  }
-
   /** A short line under the clock, for the goal: "SCORE IN ORANGE GOAL". */
   setBanner(text, color) {
     if (!text) {
@@ -300,17 +259,16 @@ export class UI {
   }
 
   /** One name tag at a screen position. `avatar` is a URL or null. */
-  tag(id, name, team, x, y, alpha, ready, avatar) {
+  tag(id, name, team, x, y, alpha, avatar) {
     let t = this.tagMap.get(id);
     if (!t) {
       const el = h('div', 'tag');
       const sym = h('span', 'sym');
       const av = h('span', 'av');
       const nm = h('span', 'nm');
-      const rd = h('span', 'ready', 'READY');
-      el.append(av, sym, nm, rd);
+      el.append(av, sym, nm);
       this.tags.appendChild(el);
-      t = { el, sym, av, nm, rd, team: 0, name: null, used: true, shown: true, ready: null };
+      t = { el, sym, av, nm, team: 0, name: null, used: true, shown: true };
       this.tagMap.set(id, t);
     }
     t.used = true;
@@ -322,10 +280,6 @@ export class UI {
     if (t.name !== name) {
       t.name = name;
       t.nm.textContent = name;
-    }
-    if (t.ready !== ready) {
-      t.ready = ready;
-      t.rd.hidden = !ready;
     }
     setAvatar(t.av, avatar, name);
     if (!t.shown) {

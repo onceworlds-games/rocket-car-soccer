@@ -1,6 +1,5 @@
 // The camera: where it stands and what it looks at. Pure maths (no three.js), so it can be tested. A chase camera sits
-// behind and above the car; with ball cam on it turns to keep the ball ahead of the car. Other modes: a slow orbit for the
-// title, a broadcast view for watchers and a swing round the goal for the celebration.
+// behind and above the car; with ball cam on it turns to keep the ball ahead of the car. Other modes: a broadcast view for watchers and a swing round the goal for the celebration.
 
 import { PX, PZ, GOAL_HW, GOAL_D, CAR_Y } from '../sim/consts.js';
 import { clamp, wrapPi, lerp } from '../sim/rng.js';
@@ -85,24 +84,6 @@ export class CameraRig {
     const speed = Math.hypot(c.vx, c.vz);
     const fovTarget = this.fovKick ? 75 + clamp(speed / 33, 0, 1) * 7 : 75;
     this.fov += (fovTarget - this.fov) * (ease || 1 - Math.exp(-dt * 3));
-    this.finish(dt);
-  }
-
-  /** A slow orbit round the whole pitch, watching the ball (the title screen). */
-  orbit(dt, ball) {
-    this.t += dt;
-    const a = this.t * 0.16 + 0.6;
-    const dx = Math.cos(a) * 66;
-    const dz = Math.sin(a) * 40;
-    const dy = 17 + Math.sin(this.t * 0.31) * 3;
-    const k = 1 - Math.exp(-dt * 3);
-    this.x += (dx - this.x) * k;
-    this.y += (dy - this.y) * k;
-    this.z += (dz - this.z) * k;
-    this.lx += (ball.x * 0.55 - this.lx) * k;
-    this.ly += (3 - this.ly) * k;
-    this.lz += (ball.z * 0.55 - this.lz) * k;
-    this.fov += (58 - this.fov) * k;
     this.finish(dt);
   }
 

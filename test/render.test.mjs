@@ -185,7 +185,7 @@ test('the chase camera sits behind the car, looks ahead, stays inside the walls 
   rig.shakeOn = false;
   rig.chase(1 / 60, car, ball, true);
   assert.equal(rig.px, rig.x);
-  for (const m of ['orbit', 'spectate']) for (let i = 0; i < 60; i++) rig[m](1 / 60, ball);
+  for (let i = 0; i < 60; i++) rig.spectate(1 / 60, ball);
   for (let i = 0; i < 60; i++) rig.celebrate(1 / 60, 1, [41, 2, 3]);
   for (const v of [rig.px, rig.py, rig.pz, rig.tx, rig.ty, rig.tz, rig.fov]) assert.ok(Number.isFinite(v));
 });

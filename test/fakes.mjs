@@ -65,17 +65,11 @@ export class FakeUI {
     set('say', (big, sub, color, ms, sub2) => {
       ui.said.push({ big, sub, sub2, color });
     });
-    set('countdown', (t) => {
-      ui.count = t;
-    });
     set('setBanner', (t) => {
       ui.banner = t;
     });
     set('setSpectating', (on) => {
       ui.spectating = !!on;
-    });
-    set('showTitle', (on) => {
-      ui.title = !!on;
     });
     set('setSettings', (list, host) => {
       ui.settings = { list, host };
@@ -175,11 +169,6 @@ export class FakeInput {
     const r = this.reset;
     this.reset = false;
     return r;
-  }
-  takeEnter() {
-    const e = this.enter;
-    this.enter = false;
-    return e;
   }
   flush() {}
 }

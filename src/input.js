@@ -45,7 +45,6 @@ export class Input {
       if (code === 'Space') this.queueJump();
       else if (code === 'KeyC') this.toggleCam();
       else if (code === 'KeyR') this.rDown = performance.now();
-      else if (code === 'Enter') this.enter = true;
     } else {
       this.keys.delete(code);
       if (code === 'KeyR') this.rDown = 0;
@@ -123,12 +122,6 @@ export class Input {
     const r = this.resetQueued;
     this.resetQueued = false;
     return r;
-  }
-
-  takeEnter() {
-    const e = this.enter;
-    this.enter = false;
-    return e;
   }
 
   /** Forget anything pressed (a screen changed). */

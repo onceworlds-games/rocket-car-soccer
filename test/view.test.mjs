@@ -114,7 +114,6 @@ test('the view survives a world with no cars, a hidden tab and a huge frame time
   view.render(5, 0, world);
   view.dtSkip = true;
   view.render(0.05, 0, world);
-  view.rig.orbit(0.016, world.ball);
   view.rig.spectate(0.016, world.ball);
   view.render(0.016, 0, world);
   assert.ok(Number.isFinite(view.camera.position.x));

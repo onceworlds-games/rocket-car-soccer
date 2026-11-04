@@ -121,8 +121,6 @@ test('C toggles the camera once per press, R held puts a stuck car back, Space a
   listeners.blur.forEach((fn) => fn());
   inp.poll();
   assert.equal(inp.thr, 0);
-  press('Enter');
-  assert.equal(inp.takeEnter(), true);
   inp.flush();
   assert.equal(inp.takeJump(), false);
 });

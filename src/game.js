@@ -43,7 +43,6 @@ export class Game {
     this.input = new deps.Input(ow);
     this.sound = new deps.Sound();
     this.ui = new deps.UI(root, {
-      onPlay: () => this.play(),
       onSetting: (id, v) => this.room.setSetting(id, v),
       onCam: () => this.toggleCam(),
       onInvite: () => ow.ui?.showInvite?.(),
@@ -54,7 +53,6 @@ export class Game {
     } catch (e) {
       console.warn('[rocket-car-soccer] no 3D graphics here', e);
     }
-    this.mode = 'title';
     this.world = new World(hashString(room.me.id));
     this.ballCam = true;
     this.kind = 'none';
@@ -68,7 +66,6 @@ export class Game {
     this.sp = {};
     this.tmpBall = makeBall();
     this.proj = { x: 0, y: 0, depth: 0, on: false };
-    this.demoHost = null;
     this.controlsOn = null;
     this.legendUntil = 0;
     this.stopUntil = 0;
@@ -93,7 +90,12 @@ export class Game {
     }
     this.attachRoom(room);
     this.applySettings();
-    this.buildDemo();
+    this.world.kickoff();
+    this.carsDirty = true;
+    this.sound.setMusic('menu');
+    this.legendUntil = performance.now() + 20000;
+    // browsers let the sound start at the first key or tap in the game
+    for (const ev of ['keydown', 'pointerdown']) window.addEventListener(ev, () => this.sound.unlock());
     this.resize();
     this.onResize = () => this.resize();
     window.addEventListener('resize', this.onResize);
@@ -189,7 +191,7 @@ export class Game {
   }
 
   isAuth() {
-    return this.mode === 'play' && this.room.isHost === true && this.room.connected !== false;
+    return this.room.isHost === true && this.room.connected !== false;
   }
 
   applySettings() {
@@ -206,59 +208,6 @@ export class Game {
   resize() {
     const pr = this.ow.settings.pixelRatio ? this.ow.settings.pixelRatio(2) : Math.min(window.devicePixelRatio || 1, 2);
     if (this.view) this.view.resize(window.innerWidth, window.innerHeight, pr);
-  }
-
-  // ================================================================ title
-
-  /** The title's backdrop: bots playing 3 against 3 with a ball of their own. */
-  buildDemo() {
-    const w = this.world;
-    for (const c of [...w.cars]) w.removeCar(c.id);
-    for (let i = 0; i < 6; i++) {
-      const c = makeCar(`d${i}`, 1 + (i % 2), 'bot');
-      c.slot = i >> 1;
-      c.bot = true;
-      c.accent = i;
-      c.name = `Bot ${i}`;
-      w.addCar(c);
-    }
-    w.frozen = false;
-    w.botsHold = false;
-    w.kickoff();
-    this.demoHost = new HostSim(w, null);
-    this.host = null;
-    this.match = null;
-    this.carsDirty = true;
-    if (this.view) this.view.syncCars(w, null);
-    this.room.hideLobby?.(true);
-    this.ui.showTitle(true);
-    this.ui.showHud(false);
-    this.ui.showLobby(false);
-    this.setControls(false);
-    this.view?.rig.snapChase({ x: -20, y: 0.6, z: 0, h: 0, vx: 0, vz: 0 }, w.ball, false);
-  }
-
-  /** The Play button (or a tap, Space or Enter): sound starts, the lobby appears, and you drive. */
-  play() {
-    if (this.mode !== 'title') return;
-    this.sound.unlock();
-    this.mode = 'play';
-    this.ui.showTitle(false);
-    this.room.hideLobby?.(false);
-    this.input.flush();
-    this.demoHost = null;
-    this.acc = 0;
-    const w = this.world;
-    for (const c of [...w.cars]) w.removeCar(c.id);
-    w.frozen = false;
-    w.botsHold = false;
-    w.kickoff();
-    this.view?.fx.clear();
-    this.kind = 'none';
-    this.carsDirty = true;
-    this.primed = false;
-    this.sound.setMusic('menu');
-    this.legendUntil = performance.now() + 20000;
   }
 
   // ================================================================ the frame
@@ -282,34 +231,8 @@ export class Game {
   }
 
   step(dt) {
-    if (this.mode === 'title') {
-      this.stepTitle(dt);
-    } else {
-      this.stepPlay(dt);
-    }
+    this.stepPlay(dt);
     this.ui.tick(performance.now());
-  }
-
-  stepTitle(dt) {
-    const w = this.world;
-    this.acc += dt;
-    let n = 0;
-    while (this.acc >= STEP && n < 5) {
-      this.demoHost.step(performance.now());
-      this.acc -= STEP;
-      n++;
-    }
-    if (n === 5) this.acc = 0;
-    if (this.input.takeEnter() || this.input.takeJump()) this.play();
-    if (this.view) {
-      this.view.rig.orbit(dt, w.ball);
-      this.view.focus.x = w.ball.x;
-      this.view.focus.z = w.ball.z;
-      this.view.lastTeam = this.demoHost ? this.demoHost.lastTeam : 0;
-      this.view.render(dt, this.acc / STEP, w);
-    }
-    this.ui.setTouch(!!this.ow.controls?.touch);
-    this.updateMusic();
   }
 
   stepPlay(dt) {
@@ -449,10 +372,7 @@ export class Game {
       w.kickoff();
       this.view?.fx.clear();
       this.sound.setMusic('menu');
-      if (prev === 'playing' || prev === 'starting') {
-        this.resultsHideAt = this.resultsFor ? performance.now() + RESULTS_AFTER_MS : 0;
-        this.room.hideLobby?.(false);
-      }
+      if (prev === 'playing' || prev === 'starting') this.resultsHideAt = this.resultsFor ? performance.now() + RESULTS_AFTER_MS : 0;
       this.snapMyCamera();
     }
   }
@@ -765,7 +685,7 @@ export class Game {
   onMessage(d, from, at) {
     if (!d || typeof d !== 'object' || !from) return;
     if (d.t === 'save') {
-      if (from.id === this.room.host && this.mode === 'play') this.onSave();
+      if (from.id === this.room.host) this.onSave();
       return;
     }
     if (d.t !== 'hit' || !this.host || !this.isAuth()) return;
@@ -1228,7 +1148,6 @@ export class Game {
       ui.setScore(0, 0);
       ui.score.hidden = true;
       ui.setClock('0:00');
-      ui.countdown(null);
       ui.setBanner('', '');
       if (this.resultsHideAt && now > this.resultsHideAt) {
         this.resultsHideAt = 0;
@@ -1245,20 +1164,14 @@ export class Game {
     }
     if (car) ui.setBoost(car.boost, car.boosting);
 
-    // the countdown: the platform's before the match, ours (3-2-1) after a goal
-    let count = null;
-    if (kind === 'starting') {
-      const left = (room.match.startsAt || 0) - this.ow.now();
-      count = left > 0 ? String(Math.ceil(left / 1000)) : 'GO';
-    } else if (kind === 'playing' && g && g.phase === 'kick') {
-      const left = g.until - room.matchNow();
-      count = left > 0 ? String(Math.ceil(left / 1000)) : 'GO';
-    } else if (now < this.goUntil) count = 'GO';
+    // the beeps: under the platform's 3-2-1 before the match, and for the seconds to a kickoff after a goal (a small line, not a second start)
+    const left = kind === 'starting' ? (room.match.startsAt || 0) - this.ow.now() : kind === 'playing' && g && g.phase === 'kick' ? g.until - room.matchNow() : 0;
+    const count = left > 0 ? String(Math.ceil(left / 1000)) : null;
     if (count !== this.lastCount) {
       this.lastCount = count;
-      if (count && count !== 'GO') this.sound.beep(Number(count));
+      if (count) this.sound.beep(Number(count));
     }
-    ui.countdown(count, count === 'GO' ? '#ffd23d' : '#ffffff');
+    const kickoff = kind === 'playing' && count ? `KICKOFF ${count}` : '';
 
     if (!lobby && g) {
       ui.setScore(g.sc[0], g.sc[1]);
@@ -1276,8 +1189,8 @@ export class Game {
     ui.setMyTeam(!lobby && !spectating && tm ? tm : 0);
     if (!lobby && !spectating && tm && (kind === 'starting' || (g && (g.phase === 'kick' || now < this.bannerUntil)))) {
       const opp = TEAMS[3 - tm];
-      ui.setBanner(`SCORE IN ${opp.name} GOAL`, hex(opp.glow));
-    } else ui.setBanner('', '');
+      ui.setBanner(`${kickoff ? `${kickoff} · ` : ''}SCORE IN ${opp.name} GOAL`, hex(opp.glow));
+    } else ui.setBanner(kickoff, '');
   }
 
   updateTags(kind, g) {
@@ -1305,7 +1218,7 @@ export class Game {
       const dist = Math.hypot(cam.x - c.x, cam.y - c.y, cam.z - c.z);
       const alpha = clamp(1.25 - dist / 75, 0.35, 1);
       const pl = room.players.get(c.id);
-      ui.tag(c.id, c.name || 'Player', c.team, this.proj.x, this.proj.y, alpha, lobby && !!pl && pl.ready === true, c.bot ? null : this.avatars.url(c.id));
+      ui.tag(c.id, c.name || 'Player', c.team, this.proj.x, this.proj.y, alpha, c.bot ? null : this.avatars.url(c.id));
     }
     if (!arrow) ui.setArrow(false, 0, 0, '#fff');
     ui.endTags();
@@ -1322,12 +1235,6 @@ export class Game {
   updateMusic() {
     const s = this.sound;
     const car = this.myCar;
-    if (this.mode === 'title') {
-      s.setMusic('menu');
-      s.setBoost(false);
-      s.engine(0, 0, false);
-      return;
-    }
     const k = this.kind;
     s.setMusic(k === 'playing' || k === 'starting' ? 'play' : 'menu');
     if (car && !this.spectating && (k === 'lobby' || k === 'playing')) {
@@ -1350,9 +1257,7 @@ export class Game {
       this.ui.hideClosed();
       try {
         const room = await this.ow.rooms.join(JOIN_OPTIONS);
-        this.mode = 'play';
         this.attachRoom(room);
-        this.room.hideLobby?.(false);
         const w = this.world;
         for (const c of [...w.cars]) w.removeCar(c.id);
         w.kickoff();

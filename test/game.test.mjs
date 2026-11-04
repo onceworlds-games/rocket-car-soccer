@@ -1,4 +1,4 @@
-// Whole pages of the game, run in node against a fake room server and fake screen: the title, the lobby, a match with
+// Whole pages of the game, run in node against a fake room server and fake screen: the lobby, a match with
 // bots, a second player, a host that leaves, a reload. This is where the network and match glue is checked.
 
 import test from 'node:test';
@@ -9,21 +9,11 @@ import { readG } from '../src/sim/rules.js';
 
 const g = (hub) => readG(hub.state.g, hub.match.id);
 
-test('a lone player: the title plays itself, Play opens the lobby, the car drives, a match with bots runs to the results and back', async () => {
+test('a lone player: the lobby at once, the car drives, a match with bots runs to the results and back', async () => {
   const hub = new Hub();
   const page = await makePage(hub, 'ann', { team: 1 });
   const { game, room, rec } = page;
-  run(hub, 3000);
-  assert.equal(game.mode, 'title');
-  assert.equal(game.world.cars.length, 6, 'six bots play behind the title');
-  assert.ok(game.world.cars.every((c) => c.kind === 'bot'));
-  assert.ok(game.view.renders > 100, 'the title is drawn every frame');
-  assert.ok(Math.hypot(game.world.cars[0].vx, game.world.cars[0].vz) > 1 || game.world.time > 1);
-  assert.ok(page.game.ui.calls.length >= 0);
-
-  game.play();
   run(hub, 800);
-  assert.equal(game.mode, 'play');
   assert.equal(game.kind, 'lobby');
   assert.equal(game.world.cars.length, 1, 'only you in the lobby');
   assert.equal(game.myCar.kind, 'local');
@@ -47,7 +37,7 @@ test('a lone player: the title plays itself, Play opens the lobby, the car drive
   assert.equal(game.world.frozen, true);
   const gs = g(hub);
   assert.ok(gs && gs.phase === 'pre' && gs.by === 'ann' && gs.roster.length === 4, 'the host wrote the record at the countdown');
-  assert.ok(game.ui.count === '3' || game.ui.count === '2', `the countdown shows ${game.ui.count}`);
+  assert.equal(game.ui.banner, 'SCORE IN ORANGE GOAL', 'the goal, under the platform\'s countdown');
 
   run(hub, 3200);
   assert.equal(game.kind, 'playing');
@@ -87,8 +77,6 @@ test('a second player joins: both see each other, the guest follows the host\'s 
   hub.settings = { time: 120, size: 2 };
   const a = await makePage(hub, 'ann', { team: 1 });
   const b = await makePage(hub, 'bob', { team: 2 });
-  a.game.play();
-  b.game.play();
   run(hub, 1500);
   assert.equal(a.game.world.cars.length, 2);
   assert.equal(b.game.world.cars.length, 2);
@@ -151,8 +139,6 @@ test('the host leaves mid-match: the guest takes over the ball, the bots and the
   hub.settings = { time: 120, size: 2 };
   const a = await makePage(hub, 'ann', { team: 1 });
   const b = await makePage(hub, 'bob', { team: 2 });
-  a.game.play();
-  b.game.play();
   run(hub, 500);
   hub.startMatch(['ann', 'bob'], 2000);
   run(hub, 12000);
@@ -173,14 +159,11 @@ test('a page that loads mid-match watches until the next one, and a reloaded pla
   const hub = new Hub();
   hub.settings = { time: 120, size: 1 };
   const a = await makePage(hub, 'ann', { team: 1 });
-  a.game.play();
   run(hub, 500);
   hub.startMatch(['ann'], 2000);
   run(hub, 9000);
   const late = await makePage(hub, 'cat', { team: 2 });
   run(hub, 500);
-  assert.equal(late.game.mode, 'title');
-  late.game.play();
   run(hub, 1500);
   assert.equal(late.game.spectating, true);
   assert.equal(late.game.myCar, null);
@@ -194,7 +177,6 @@ test('a page that loads mid-match watches until the next one, and a reloaded pla
   hub.rooms.delete('ann');
   const again = await makePage(hub, 'ann', { team: 1 });
   hub.players.get('ann').presence = keep;
-  again.game.play();
   run(hub, 800);
   assert.equal(again.game.kind, 'playing');
   assert.ok(again.game.myCar && Math.hypot(again.game.myCar.x - keep.x, again.game.myCar.z - keep.z) < 12, 'carried on from where it was');
@@ -204,7 +186,6 @@ test('a page that loads mid-match watches until the next one, and a reloaded pla
 test('a closed room offers one button, and the lobby settings are the host\'s to change', async () => {
   const hub = new Hub();
   const a = await makePage(hub, 'ann', { team: 1 });
-  a.game.play();
   run(hub, 500);
   assert.ok(a.game.ui.settings.host, 'the host gets the tap targets');
   assert.deepEqual(a.game.ui.settings.list.map((s) => s.id), ['time', 'size']);
@@ -220,7 +201,6 @@ test('three players and a bot: every page agrees on the record, and the match en
   const hub = new Hub();
   hub.settings = { time: 120, size: 2 };
   const pages = [await makePage(hub, 'ann', { team: 1 }), await makePage(hub, 'bob', { team: 1 }), await makePage(hub, 'cat', { team: 2 })];
-  for (const p of pages) p.game.play();
   run(hub, 800);
   hub.startMatch(['ann', 'bob', 'cat'], 3000);
   run(hub, 300);
@@ -261,7 +241,6 @@ test('a paused match stands still, and goes on where it was', async () => {
   const hub = new Hub();
   hub.settings = { time: 120, size: 1 };
   const a = await makePage(hub, 'ann', { team: 1 });
-  a.game.play();
   run(hub, 500);
   hub.startMatch(['ann'], 2000);
   run(hub, 6500);
@@ -284,8 +263,6 @@ test('the host loses its connection and gets it back: it carries on from the rec
   hub.settings = { time: 120, size: 1 };
   const a = await makePage(hub, 'ann', { team: 1 });
   const b = await makePage(hub, 'bob', { team: 2 });
-  a.game.play();
-  b.game.play();
   run(hub, 500);
   hub.startMatch(['ann', 'bob'], 2000);
   run(hub, 9000);
@@ -299,7 +276,7 @@ test('the host loses its connection and gets it back: it carries on from the rec
   assert.equal(hub.match.phase, 'lobby');
 });
 
-test('opened on its own (no platform): the stub room lets the title, the lobby and driving work without throwing', async () => {
+test('opened on its own (no platform): the stub room lets the lobby and driving work without throwing', async () => {
   const { makeStub } = await import('../src/net/stub.js');
   const { Game } = await import('../src/game.js');
   const { DEPS, clock } = await import('./fakes.mjs');
@@ -317,9 +294,6 @@ test('opened on its own (no platform): the stub room lets the title, the lobby a
         for (const cb of cbs) cb(clock.vt);
       }
     };
-    frames(120);
-    assert.equal(game.mode, 'title');
-    game.play();
     frames(60);
     game.input.thr = 1;
     game.input.boost = true;
@@ -334,7 +308,7 @@ test('opened on its own (no platform): the stub room lets the title, the lobby a
     assert.equal(game.world.cars.length, 1);
     game.input.jump = true;
     frames(30);
-    assert.ok(game.view.renders > 300);
+    assert.ok(game.view.renders > 200);
   } finally {
     console.error = orig;
   }
